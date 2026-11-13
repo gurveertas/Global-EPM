@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { api, get } from "../lib/api";
+import { ApiError, api, get } from "../lib/api";
 import { useSession } from "../lib/session";
 import { Button, ErrorNote, Field, Input } from "../components/ui";
 import { Aurora, BlurText, BorderBeam, GradientText, GridPattern, NumberTicker, Ring, ShimmerButton, motion } from "../components/magic";
@@ -18,10 +18,18 @@ function Shell({ title, children }: { title: string; children: ReactNode }) {
     if (c && !["#0f5f52", "#2563eb", "#1f2a37"].includes(c.toLowerCase())) document.documentElement.style.setProperty("--brand", c);
   }, [cfg.data]);
   if (cfg.isError) {
+    const companyNotFound = cfg.error instanceof ApiError && cfg.error.status === 401 && cfg.error.message === "Company not found";
     return (
       <div className="relative grid min-h-screen place-items-center overflow-hidden bg-[#06050a] p-6 text-center text-white">
         <Aurora className="opacity-60" />
-        <div className="relative"><h1 className="text-3xl font-extrabold">Company not found</h1><p className="mt-2 text-white/60">Check the address. It looks like <b className="text-white">yourcompany.eszy.com</b>.</p></div>
+        <div className="relative">
+          <h1 className="text-3xl font-extrabold">{companyNotFound ? "Company not found" : "Sign-in temporarily unavailable"}</h1>
+          <p className="mt-2 text-white/60">
+            {companyNotFound
+              ? <>No company is configured for <b className="text-white">{window.location.hostname}</b>.</>
+              : <>Could not load sign-in settings{cfg.error instanceof ApiError ? ` (HTTP ${cfg.error.status})` : ""}. Please try again later.</>}
+          </p>
+        </div>
       </div>
     );
   }
