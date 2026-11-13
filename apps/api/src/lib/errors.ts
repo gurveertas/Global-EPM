@@ -22,7 +22,6 @@ function logInternalError(err: unknown, req: Request, res: Response) {
     host: req.hostname,
     tenantId: req.tenant?.id,
     tenantSlug: req.tenant?.slug,
-    vercelId: req.get("x-vercel-id"),
   }, "internal server error");
 }
 
