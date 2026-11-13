@@ -2,7 +2,7 @@ import express from "express";
 import { randomUUID } from "node:crypto";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import helmet from "helmet";
+const helmet = require("helmet");
 import { authRouter } from "./routes/auth";
 import { peopleRouter } from "./routes/people";
 import { salesRouter } from "./routes/sales";
