@@ -1,0 +1,18 @@
+# API and worker image (same image, different command).
+FROM node:22-alpine AS build
+WORKDIR /app
+RUN corepack enable
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
+RUN pnpm install --frozen-lockfile --filter @eszy/api... --filter @eszy/db...
+RUN pnpm --filter @eszy/api build && pnpm deploy --filter @eszy/api --prod --legacy /out
+
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /out ./
+COPY --from=build /app/packages/db/migrations ./migrations
+EXPOSE 4000
+USER node
+CMD ["node", "dist/index.js"]

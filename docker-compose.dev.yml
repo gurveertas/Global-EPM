@@ -1,0 +1,117 @@
+# Everything for local development, with nothing to install but Docker:
+#   docker compose -f docker-compose.dev.yml up
+# The first start also loads three months of demo data (about 3 minutes; watch for "Demo data ready").
+# Then open http://localhost:5173 (site), http://demo.localhost:5173 (demo company),
+# http://admin.localhost:5173 (platform console).
+
+x-node: &node
+  build: { context: ., dockerfile: infra/Dockerfile.dev }
+  image: eszy-dev
+  working_dir: /app
+  volumes:
+    - .:/app
+    # Packages are built for Linux inside Docker, so they get their own volumes
+    # and never mix with a node_modules folder on your computer.
+    - nm-root:/app/node_modules
+    - nm-api:/app/apps/api/node_modules
+    - nm-web:/app/apps/web/node_modules
+    - nm-db:/app/packages/db/node_modules
+    - nm-shared:/app/packages/shared/node_modules
+    - pnpm-store:/pnpm/store
+  environment: &env
+    NODE_ENV: development
+    DATABASE_URL: postgres://eszy_app:app@postgres:5432/eszy
+    MIGRATION_DATABASE_URL: postgres://eszy_owner:owner@postgres:5432/eszy
+    REDIS_URL: redis://redis:6379
+    BASE_DOMAIN: eszy.com
+    APP_URL_SCHEME: http
+    WEB_PORT_SUFFIX: ":5173"
+    DEV_TENANT_HEADER: "true"
+    MAIL_TRANSPORT: log
+    PLATFORM_ADMIN_EMAIL: owner@eszy.com
+    PLATFORM_ADMIN_PASSWORD: change-me-now
+    SEED_DEMO: "1"
+    API_PROXY_TARGET: http://api:4000
+    # Docker Desktop on Mac and Windows doesn't always pass file changes through; polling makes reloads reliable.
+    CHOKIDAR_USEPOLLING: "true"
+    npm_config_store_dir: /pnpm/store
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: eszy
+      POSTGRES_USER: eszy_owner
+      POSTGRES_PASSWORD: owner
+      ESZY_APP_PASSWORD: app
+    # Change with POSTGRES_HOST_PORT=5433 if something else already uses 5432 on your computer.
+    ports: ["${POSTGRES_HOST_PORT:-5432}:5432"]
+    volumes:
+      - eszy-dev-pg:/var/lib/postgresql/data
+      - ./infra/postgres-init.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eszy_owner -d eszy"]
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    # 6380 on your computer, so it never clashes with a Redis you already run on 6379.
+    # Only needed when you run the app outside Docker; inside Docker the app uses redis:6379.
+    ports: ["${REDIS_HOST_PORT:-6380}:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+  # Installs packages, then creates the tables and seeds plans, the console login and the demo company.
+  # Runs once on every `up` and exits; both steps are safe to repeat.
+  setup:
+    <<: *node
+    command: sh -c "pnpm install --frozen-lockfile && pnpm db:migrate && pnpm db:seed"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    <<: *node
+    command: pnpm --filter @eszy/api dev
+    ports: ["${API_HOST_PORT:-4000}:4000"]
+    depends_on:
+      setup: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  worker:
+    <<: *node
+    command: pnpm --filter @eszy/api dev:worker
+    depends_on:
+      setup: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  web:
+    <<: *node
+    command: pnpm --filter @eszy/web dev --host 0.0.0.0
+    ports: ["5173:5173"]
+    depends_on:
+      setup: { condition: service_completed_successfully }
+
+  # Fills the demo company with three months of sample data the first time, then exits.
+  # On later starts it sees the data is already there and exits straight away.
+  demo:
+    <<: *node
+    command: pnpm demo
+    restart: "no"
+    environment:
+      <<: *env
+      API_URL: http://api:4000/api/v1
+    depends_on:
+      setup: { condition: service_completed_successfully }
+      api: { condition: service_started }
+
+volumes:
+  eszy-dev-pg: {}
+  nm-root: {}
+  nm-api: {}
+  nm-web: {}
+  nm-db: {}
+  nm-shared: {}
+  pnpm-store: {}

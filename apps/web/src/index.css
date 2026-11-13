@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/* eszy panel: black and white surfaces with a deep violet brand and a neon glow kept for the moments that matter
+   (the active nav item, primary actions, live numbers, the assistant). Status colours always come with a word.
+   --brand and --accent can be changed in the company's branding settings. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Sora Variable", "Plus Jakarta Sans Variable", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-ink: #0b0a10;
+  --color-ink-deep: #050407;
+  --color-amber: #f0a531;
+  --color-amber-ink: #8a5300;
+  --color-paid: #1c7a4f;
+  --color-late: #b4441f;
+  --animate-shimmer: shimmer 2.6s linear infinite;
+  --animate-beam: beam calc(var(--beam-duration, 8) * 1s) linear infinite;
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-fade-up: fade-up .5s cubic-bezier(.2,.7,.2,1) both;
+  --animate-gradient: gradient 6s linear infinite;
+}
+
+:root {
+  --brand: #6d28d9;
+  --brand-2: #a855f7;            /* the neon end of the brand gradient */
+  --neon: #b25cff;
+  --glow: 0 0 0 1px rgb(168 85 247 / .35), 0 8px 28px -8px rgb(139 92 246 / .55);
+  --brand-soft: #f3ecff;
+  --accent: #c026d3;
+  --bg: #f4f5f8;
+  --card: #ffffff;
+  --line: #e4e6ec;
+  --text: #0b0a10;
+  --muted: #5f6272;
+  --side: #09080d;
+  --side-text: #d9d6e6;
+  --side-muted: #8a869c;
+  --side-line: #1d1b26;
+  /* Categorical series, fixed order (validated reference palette). */
+  --series-1: #7c3aed;
+  --series-2: #e06c12;
+  --series-3: #129a74;
+  --series-4: #2f7fd8;
+  --series-5: #d9468c;
+  --series-6: #a88000;
+  /* Company-changeable surfaces (Settings → Appearance). Defaults follow the brand. */
+  --btn: var(--brand);
+  --btn-2: var(--brand-2);
+  --btn-text: #ffffff;
+  --th-bg: #f9fafb;
+  --th-text: #5f6272;
+  --td-bg: transparent;
+  --td-alt: transparent;
+  --td-text: var(--text);
+  --td-hover: #f8f7fd;
+  color-scheme: light;
+}
+.dark {
+  --brand-soft: #241638;
+  --bg: #07060b;
+  --card: #110f18;
+  --line: #24212f;
+  --text: #f1effa;
+  --muted: #a19db3;
+  --side: #050408;
+  --glow: 0 0 0 1px rgb(178 92 255 / .45), 0 10px 34px -8px rgb(168 85 247 / .6);
+  --series-1: #8b6cf0;
+  --series-2: #d9742a;
+  --series-3: #1f9c7b;
+  --series-4: #4486dc;
+  --series-5: #d45a93;
+  --series-6: #b88c1f;
+  --th-bg: #15121e;
+  --th-text: #a19db3;
+  --td-hover: #1a1526;
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+.tabnum, td { font-variant-numeric: tabular-nums; }
+:focus-visible:not(input, textarea, select) { outline: 3px solid var(--neon); outline-offset: 2px; border-radius: 6px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
+input, select, textarea { font: inherit; color: inherit; }
+::selection { background: rgb(168 85 247 / .25); }
+
+/* The brand gradient, used sparingly: primary buttons, the active nav item, headline numbers. */
+.bg-brand-gradient { background-image: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%); }
+.text-brand-gradient { background-image: linear-gradient(90deg, var(--brand), var(--brand-2), #e879f9, var(--brand)); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.neon-ring { box-shadow: var(--glow); }
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--side-line) transparent; }
+
+@keyframes shimmer { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(220%) skewX(-20deg); } }
+@keyframes beam { to { offset-distance: 100%; } }
+@keyframes aurora { 0% { transform: translate3d(-8%, -6%, 0) rotate(0deg) scale(1); } 50% { transform: translate3d(6%, 4%, 0) rotate(25deg) scale(1.15); } 100% { transform: translate3d(-4%, 8%, 0) rotate(-15deg) scale(1.05); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes gradient { to { background-position: 300% 0; } }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+/* Primary buttons: the brand gradient, or the company's own button colours. */
+.btn-primary { background-image: linear-gradient(135deg, var(--btn) 0%, var(--btn-2) 100%); color: var(--btn-text); }
+
+/* Cards that light up under the pointer, like the landing page: a glowing border and a soft wash that follow it.
+   One document listener (see main.tsx) sets --mx/--my on whichever card is under the pointer. */
+.glow-card { position: relative; }
+.glow-card::before, .glow-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s ease; }
+.glow-card::before {
+  padding: 1px; z-index: 2;
+  background: radial-gradient(260px circle at var(--mx, -500px) var(--my, -500px), var(--brand-2), color-mix(in srgb, var(--brand-2) 35%, transparent) 40%, transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.glow-card::after { background: radial-gradient(420px circle at var(--mx, -500px) var(--my, -500px), rgb(168 85 247 / .07), transparent 65%); }
+.glow-card:hover::before { opacity: .85; }
+.glow-card:hover::after { opacity: .6; }
+/* In light mode the pointer glow stays a thin edge light: no violet wash over white cards. */
+:root:not(.dark) .glow-card::after { display: none; }
+:root:not(.dark) .glow-card:hover::before { opacity: .55; }
+.dark .glow-card::after { background: radial-gradient(420px circle at var(--mx, -500px) var(--my, -500px), rgb(178 92 255 / .12), transparent 65%); }
+
+/* Tables: one tidy style everywhere. Cells stay on one line and long text ends in "…"; hovering shows it in full.
+   Quiet header (small grey labels on a light band), roomy rows, hairline dividers, and an accent bar on the row under the pointer. */
+.eszy-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13.5px; }
+.eszy-table thead th { background: var(--th-bg); color: var(--th-text); font-size: 12.5px; font-weight: 600; letter-spacing: .01em; white-space: nowrap; padding: 9px 16px; border-bottom: 1px solid var(--line); text-align: left; position: sticky; top: 0; z-index: 1; }
+.eszy-table thead th:first-child { padding-left: 20px; }
+.eszy-table tbody td { background: var(--td-bg); color: var(--td-text); padding: 13px 16px; border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent); white-space: nowrap; max-width: 22rem; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.eszy-table tbody td:first-child { padding-left: 20px; position: relative; }
+.eszy-table tbody tr:nth-child(even) td { background: var(--td-alt); }
+.eszy-table tbody tr:last-child td { border-bottom: 0; }
+.eszy-table tbody tr { transition: background-color .15s; }
+.eszy-table tbody tr:hover td { background: var(--td-hover); }
+.eszy-table tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--brand-2); }
+.eszy-table td :where(div, p, span, a) { max-width: 100%; }
+.eszy-table td :where(div, p) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eszy-table td.wrap, .eszy-table td.wrap * { white-space: normal; }
+.eszy-table td.actions { overflow: visible; max-width: none; text-align: right; }
+/* Numbers are never cut off: only text ends in "…". */
+.eszy-table tbody td.text-right, .eszy-table tbody td.tabnum, .eszy-table tfoot td { max-width: none; overflow: visible; text-overflow: clip; }
+.eszy-table td :where(.tabnum, b, strong):not(div, p) { overflow: visible; text-overflow: clip; }
+.eszy-table.dense tbody td { padding-top: 8px; padding-bottom: 8px; }
+.eszy-table tfoot td:first-child { padding-left: 20px !important; }
+
+/* The hover card for cut-off text. */
+.overflow-tip { position: fixed; z-index: 100; max-width: min(420px, 80vw); padding: 7px 10px; border-radius: 10px; background: #14111c; color: #f4f2fb; font-size: 12.5px; line-height: 1.45; box-shadow: 0 12px 32px -10px rgb(20 10 40 / .45), 0 0 0 1px rgb(178 92 255 / .25); pointer-events: none; white-space: pre-wrap; word-break: break-word; }
+
+/* Row scrollers without a visible bar; faded edges show there's more. */
+.no-scrollbar { scrollbar-width: none; } .no-scrollbar::-webkit-scrollbar { display: none; }
+.eszy-table tbody td:has(button, select, input:not([type=checkbox])) { overflow: visible; max-width: none; }
+
+/* A short cross-fade when someone switches between light and dark. */
+.theme-fade, .theme-fade *, .theme-fade *::before, .theme-fade *::after { transition: background-color .35s ease, border-color .35s ease, color .25s ease, fill .25s ease !important; }
+
+/* Dark versions of the soft status tints used for notes and chips across the panel. */
+.dark .bg-\[\#fdf0d9\], .dark .bg-\[\#fff7e6\], .dark .bg-\[\#fff1d8\], .dark .bg-\[\#fff6e3\] { background-color: rgb(240 165 49 / .14); }
+.dark .bg-\[\#fbe5dc\], .dark .bg-\[\#fbe4da\] { background-color: rgb(239 106 60 / .15); }
+.dark .bg-\[\#e3ecff\], .dark .bg-\[\#e5eefb\] { background-color: rgb(96 140 230 / .16); }
+.dark .bg-\[\#f0e6f7\] { background-color: rgb(168 85 247 / .16); }
+.dark .text-\[\#7d4c00\], .dark .text-\[\#6b4100\] { color: #f5c879; }
+.dark .text-\[\#9c3a19\], .dark .text-\[\#7a2b10\] { color: #f3a98c; }
+.dark .text-\[\#2747a8\], .dark .text-\[\#24529a\] { color: #a9c4f5; }
+.dark .text-\[\#4a1f5e\] { color: #dcc2f5; }
+.dark .border-\[\#f3d39a\], .dark .border-\[\#f3c2ad\], .dark .border-\[\#f3dcaa\] { border-color: rgb(240 165 49 / .3); }
+.dark .hover\:bg-\[\#fbe4da\]:hover { background-color: rgb(239 106 60 / .18); }
+
+/* Dropdowns open with a quick fade and lift. */
+@keyframes pop-in { from { opacity: 0; transform: translateY(-4px) scale(.985); } to { opacity: 1; transform: none; } }
+.animate-pop { animation: pop-in .13s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .animate-pop { animation: none; } }
+
+/* A field the server rejected: red outline until it's fixed. */
+.field-invalid :is(input, select, textarea, .rich-editor, button[aria-haspopup], .rounded-xl) { border-color: #c2410c !important; }
+.field-invalid :is(input, select, textarea):focus { box-shadow: 0 0 0 3px rgb(194 65 12 / .18) !important; }

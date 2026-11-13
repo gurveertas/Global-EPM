@@ -1,0 +1,27 @@
+{
+  "name": "eszy",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @eszy/api --filter @eszy/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @eszy/api test",
+    "db:migrate": "pnpm --filter @eszy/db migrate",
+    "db:seed": "pnpm --filter @eszy/db seed",
+    "migrate:tas": "tsx scripts/migrate-tas/migrate.ts",
+    "demo": "node scripts/demo-data.mjs",
+    "dev:worker": "pnpm --filter @eszy/api dev:worker"
+  },
+  "devDependencies": {
+    "mysql2": "^3.15.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.5",
+    "@types/node": "^22.18.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
