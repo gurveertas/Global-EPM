@@ -280,6 +280,14 @@ The default target is AWS Mumbai (`ap-south-1`): RDS PostgreSQL 16, ElastiCache 
 
 Back up the platform database itself with RDS automated backups. Each company can also send its own encrypted backups to a bucket it owns (Settings, Backups).
 
+### Vercel services
+
+`apps/vercel.json` routes `/api/*` to the Express API and all other paths to the Vite web app. Configure the Vercel project's root directory as `apps`, and make sure its build can access the repository workspace files (`pnpm-lock.yaml`, `pnpm-workspace.yaml`, and `packages/`), which the apps depend on.
+
+Vercel does not start the database or Redis from this repository's Docker Compose file. Use reachable managed PostgreSQL and Redis instances, then configure `DATABASE_URL`, `REDIS_URL`, `BASE_DOMAIN`, `JWT_SECRET` and `APP_ENCRYPTION_KEY` for the API, and `VITE_BASE_DOMAIN` for the web build. Use the actual `eszy.com` domain and configure its root, `www` and wildcard tenant subdomains in Vercel and DNS. Run `pnpm db:migrate` against the hosted database before serving traffic; keep the owner-only `MIGRATION_DATABASE_URL` out of the API runtime where possible.
+
+The Vercel config does not deploy `apps/api/src/worker.ts`. Without a separately deployed worker, queued email and background jobs (including scheduled jobs and backup/restore work) will not be processed.
+
 ## Moving TAS's data
 
 ```bash
