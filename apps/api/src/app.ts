@@ -1,4 +1,5 @@
 import express from "express";
+import { randomUUID } from "node:crypto";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
@@ -26,6 +27,12 @@ export function createApp() {
   const app = express();
   app.set("trust proxy", 1);
   app.disable("x-powered-by");
+  app.use((req, res, next) => {
+    const requestId = randomUUID();
+    res.locals.requestId = requestId;
+    res.setHeader("X-Request-Id", requestId);
+    next();
+  });
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cors({
     origin: (origin, cb) => cb(null, !origin || new URL(origin).hostname.endsWith(env.BASE_DOMAIN) || new URL(origin).hostname.endsWith("localhost")),
